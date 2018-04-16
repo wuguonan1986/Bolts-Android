@@ -21,171 +21,171 @@ import static org.junit.Assert.fail;
 
 public class CancellationTest {
 
-  @Test
-  public void testTokenIsCancelled() {
-    CancellationTokenSource cts = new CancellationTokenSource();
-    CancellationToken token = cts.getToken();
+    @Test
+    public void testTokenIsCancelled() {
+        CancellationTokenSource cts = new CancellationTokenSource();
+        CancellationToken token = cts.getToken();
 
-    assertFalse(token.isCancellationRequested());
-    assertFalse(cts.isCancellationRequested());
+        assertFalse(token.isCancellationRequested());
+        assertFalse(cts.isCancellationRequested());
 
-    cts.cancel();
+        cts.cancel();
 
-    assertTrue(token.isCancellationRequested());
-    assertTrue(cts.isCancellationRequested());
-  }
-
-  @Test
-  public void testTokenIsCancelledAfterNoDelay() throws Exception {
-    CancellationTokenSource cts = new CancellationTokenSource();
-    CancellationToken token = cts.getToken();
-
-    assertFalse(token.isCancellationRequested());
-
-    cts.cancelAfter(0);
-
-    assertTrue(token.isCancellationRequested());
-    assertTrue(cts.isCancellationRequested());
-  }
-
-  @Test
-  public void testTokenIsCancelledAfterDelay() throws Exception {
-    CancellationTokenSource cts = new CancellationTokenSource();
-    CancellationToken token = cts.getToken();
-
-    assertFalse(token.isCancellationRequested());
-
-    cts.cancelAfter(100);
-
-    assertFalse(token.isCancellationRequested());
-    assertFalse(cts.isCancellationRequested());
-
-    Thread.sleep(150);
-
-    assertTrue(token.isCancellationRequested());
-    assertTrue(cts.isCancellationRequested());
-  }
-
-  @Test
-  public void testTokenCancelAfterDelayCancellation() throws Exception {
-    CancellationTokenSource cts = new CancellationTokenSource();
-    CancellationToken token = cts.getToken();
-
-    assertFalse(token.isCancellationRequested());
-
-    cts.cancelAfter(100);
-
-    assertFalse(token.isCancellationRequested());
-    assertFalse(cts.isCancellationRequested());
-
-    cts.cancelAfter(-1);
-
-    Thread.sleep(150);
-
-    assertFalse(token.isCancellationRequested());
-    assertFalse(cts.isCancellationRequested());
-  }
-
-  @Test
-  public void testTokenThrowsWhenCancelled() {
-    CancellationTokenSource cts = new CancellationTokenSource();
-    CancellationToken token = cts.getToken();
-
-    try {
-      token.throwIfCancellationRequested();
-    } catch (CancellationException e) {
-      fail("Token has not been cancelled yet, " + CancellationException.class.getSimpleName()
-          + " should not be thrown");
+        assertTrue(token.isCancellationRequested());
+        assertTrue(cts.isCancellationRequested());
     }
 
-    cts.cancel();
+    @Test
+    public void testTokenIsCancelledAfterNoDelay() throws Exception {
+        CancellationTokenSource cts = new CancellationTokenSource();
+        CancellationToken token = cts.getToken();
 
-    try {
-      token.throwIfCancellationRequested();
-      fail(CancellationException.class.getSimpleName() + " should be thrown");
-    } catch (CancellationException e) {
-      // Do nothing
+        assertFalse(token.isCancellationRequested());
+
+        cts.cancelAfter(0);
+
+        assertTrue(token.isCancellationRequested());
+        assertTrue(cts.isCancellationRequested());
     }
-  }
 
-  @Test
-  public void testTokenCallsRegisteredActionWhenCancelled() {
-    CancellationTokenSource cts = new CancellationTokenSource();
-    CancellationToken token = cts.getToken();
-    final Capture<Object> result = new Capture<>();
+    @Test
+    public void testTokenIsCancelledAfterDelay() throws Exception {
+        CancellationTokenSource cts = new CancellationTokenSource();
+        CancellationToken token = cts.getToken();
 
-    token.register(new Runnable() {
-      @Override
-      public void run() {
-        result.set("Run!");
-      }
-    });
+        assertFalse(token.isCancellationRequested());
 
-    assertNull(result.get());
+        cts.cancelAfter(100);
 
-    cts.cancel();
+        assertFalse(token.isCancellationRequested());
+        assertFalse(cts.isCancellationRequested());
 
-    assertNotNull(result.get());
-  }
+        Thread.sleep(150);
 
-  @Test
-  public void testCancelledTokenCallsRegisteredActionImmediately() {
-    CancellationTokenSource cts = new CancellationTokenSource();
-    CancellationToken token = cts.getToken();
-    final Capture<Object> result = new Capture<>();
+        assertTrue(token.isCancellationRequested());
+        assertTrue(cts.isCancellationRequested());
+    }
 
-    cts.cancel();
+    @Test
+    public void testTokenCancelAfterDelayCancellation() throws Exception {
+        CancellationTokenSource cts = new CancellationTokenSource();
+        CancellationToken token = cts.getToken();
 
-    token.register(new Runnable() {
-      @Override
-      public void run() {
-        result.set("Run!");
-      }
-    });
+        assertFalse(token.isCancellationRequested());
 
-    assertNotNull(result.get());
-  }
+        cts.cancelAfter(100);
 
-  @Test
-  public void testTokenDoesNotCallUnregisteredAction() {
-    CancellationTokenSource cts = new CancellationTokenSource();
-    CancellationToken token = cts.getToken();
-    final Capture<Object> result1 = new Capture<>();
-    final Capture<Object> result2 = new Capture<>();
+        assertFalse(token.isCancellationRequested());
+        assertFalse(cts.isCancellationRequested());
 
-    CancellationTokenRegistration registration1 = token.register(new Runnable() {
-      @Override
-      public void run() {
-        result1.set("Run!");
-      }
-    });
-    token.register(new Runnable() {
-      @Override
-      public void run() {
-        result2.set("Run!");
-      }
-    });
+        cts.cancelAfter(-1);
 
-    registration1.close();
+        Thread.sleep(150);
 
-    cts.cancel();
+        assertFalse(token.isCancellationRequested());
+        assertFalse(cts.isCancellationRequested());
+    }
 
-    assertNull(result1.get());
-    assertNotNull(result2.get());
-  }
+    @Test
+    public void testTokenThrowsWhenCancelled() {
+        CancellationTokenSource cts = new CancellationTokenSource();
+        CancellationToken token = cts.getToken();
 
-  @Test
-  public void testCloseCancellationTokenSource() {
-    CancellationTokenSource cts = new CancellationTokenSource();
-    CancellationToken token = cts.getToken();
+        try {
+            token.throwIfCancellationRequested();
+        } catch (CancellationException e) {
+            fail("Token has not been cancelled yet, " + CancellationException.class.getSimpleName
+                    () + " should not be thrown");
+        }
 
-    token.register(new Runnable() {
-      @Override
-      public void run() {
-        // Do nothing
-      }
-    });
+        cts.cancel();
 
-    cts.close();
-  }
+        try {
+            token.throwIfCancellationRequested();
+            fail(CancellationException.class.getSimpleName() + " should be thrown");
+        } catch (CancellationException e) {
+            // Do nothing
+        }
+    }
+
+    @Test
+    public void testTokenCallsRegisteredActionWhenCancelled() {
+        CancellationTokenSource cts = new CancellationTokenSource();
+        CancellationToken token = cts.getToken();
+        final Capture<Object> result = new Capture<>();
+
+        token.register(new Runnable() {
+            @Override
+            public void run() {
+                result.set("Run!");
+            }
+        });
+
+        assertNull(result.get());
+
+        cts.cancel();
+
+        assertNotNull(result.get());
+    }
+
+    @Test
+    public void testCancelledTokenCallsRegisteredActionImmediately() {
+        CancellationTokenSource cts = new CancellationTokenSource();
+        CancellationToken token = cts.getToken();
+        final Capture<Object> result = new Capture<>();
+
+        cts.cancel();
+
+        token.register(new Runnable() {
+            @Override
+            public void run() {
+                result.set("Run!");
+            }
+        });
+
+        assertNotNull(result.get());
+    }
+
+    @Test
+    public void testTokenDoesNotCallUnregisteredAction() {
+        CancellationTokenSource cts = new CancellationTokenSource();
+        CancellationToken token = cts.getToken();
+        final Capture<Object> result1 = new Capture<>();
+        final Capture<Object> result2 = new Capture<>();
+
+        CancellationTokenRegistration registration1 = token.register(new Runnable() {
+            @Override
+            public void run() {
+                result1.set("Run!");
+            }
+        });
+        token.register(new Runnable() {
+            @Override
+            public void run() {
+                result2.set("Run!");
+            }
+        });
+
+        registration1.close();
+
+        cts.cancel();
+
+        assertNull(result1.get());
+        assertNotNull(result2.get());
+    }
+
+    @Test
+    public void testCloseCancellationTokenSource() {
+        CancellationTokenSource cts = new CancellationTokenSource();
+        CancellationToken token = cts.getToken();
+
+        token.register(new Runnable() {
+            @Override
+            public void run() {
+                // Do nothing
+            }
+        });
+
+        cts.close();
+    }
 }
